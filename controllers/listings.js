@@ -1,11 +1,6 @@
 const Listing = require("../models/listing");
-const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
 
-const mapToken = process.env.MAP_TOKEN;
-
-const geocodingClient = mbxGeocoding({
-    accessToken: mapToken
-});
+// Mapbox temporarily disabled
 
 
 // INDEX
@@ -43,61 +38,10 @@ module.exports.showListing = async (req, res) => {
         return res.redirect("/listings");
     }
 
-    /*
-     * If coordinates are missing/empty,
-     * get them again from Mapbox using listing location.
-     */
-    if (
-        !listing.geometry ||
-        !listing.geometry.coordinates ||
-        listing.geometry.coordinates.length !== 2
-    ) {
-        try {
-            console.log(
-                "Coordinates missing. Geocoding:",
-                listing.location
-            );
-
-            const response = await geocodingClient
-                .forwardGeocode({
-                    query: listing.location,
-                    limit: 1
-                })
-                .send();
-
-            if (
-                response.body.features &&
-                response.body.features.length > 0
-            ) {
-                listing.geometry =
-                    response.body.features[0].geometry;
-
-                await listing.save();
-
-                console.log(
-                    "Updated geometry:",
-                    listing.geometry
-                );
-            } else {
-                console.log(
-                    "Location not found:",
-                    listing.location
-                );
-            }
-
-        } catch (err) {
-            console.log(
-                "GEOCODING ERROR:",
-                err.message
-            );
-        }
-    }
-
     console.log("FINAL LISTING:", listing);
 
     res.render("listings/show.ejs", {
-        listing,
-        mapToken: process.env.MAP_TOKEN
+        listing
     });
 };
 
@@ -109,37 +53,6 @@ module.exports.createListing = async (req, res) => {
             "LOCATION:",
             req.body.listing.location
         );
-
-        console.log(
-            "MAP TOKEN EXISTS:",
-            !!process.env.MAP_TOKEN
-        );
-
-        const response = await geocodingClient
-            .forwardGeocode({
-                query: req.body.listing.location,
-                limit: 1
-            })
-            .send();
-
-        console.log(
-            "MAPBOX RESPONSE:",
-            response.body
-        );
-
-        if (
-            !response.body.features ||
-            response.body.features.length === 0
-        ) {
-            req.flash(
-                "error",
-                "Location not found!"
-            );
-
-            return res.redirect(
-                "/listings/new"
-            );
-        }
 
         const url = req.file.path;
         const filename = req.file.filename;
@@ -155,13 +68,8 @@ module.exports.createListing = async (req, res) => {
             filename
         };
 
-        newListing.geometry =
-            response.body.features[0].geometry;
-
-        console.log(
-            "GEOMETRY:",
-            newListing.geometry
-        );
+        // Mapbox temporarily disabled.
+        // Geometry will be added later when Mapbox is restored.
 
         const savedListing =
             await newListing.save();
@@ -251,40 +159,8 @@ module.exports.updateListing = async (
         return res.redirect("/listings");
     }
 
-    /*
-     * If location is changed,
-     * update coordinates as well.
-     */
-    if (
-        req.body.listing &&
-        req.body.listing.location &&
-        req.body.listing.location !== listing.location
-    ) {
-        try {
-            const response =
-                await geocodingClient
-                    .forwardGeocode({
-                        query:
-                            req.body.listing.location,
-                        limit: 1
-                    })
-                    .send();
-
-            if (
-                response.body.features &&
-                response.body.features.length > 0
-            ) {
-                listing.geometry =
-                    response.body.features[0].geometry;
-            }
-
-        } catch (err) {
-            console.log(
-                "UPDATE GEOCODING ERROR:",
-                err.message
-            );
-        }
-    }
+    // Mapbox temporarily disabled.
+    // Existing geometry will remain unchanged.
 
     Object.assign(
         listing,
