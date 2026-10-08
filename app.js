@@ -1,4 +1,5 @@
-if(process.env.NODE_ENV != "production") {
+
+if (process.env.NODE_ENV != "production") {
     require("dotenv").config();
 }
 
@@ -19,26 +20,27 @@ const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
-
 const MONGO_URL = process.env.MONGO_URL;
 
 main()
-.then(() => {
-    console.log("connected to DB");
-})
-.catch((err) => {
-    console.log(err);
-});
+    .then(() => {
+        console.log("connected to DB");
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 
 async function main() {
-    await mongoose.connect(MONGO_URL);   
+    await mongoose.connect(MONGO_URL);
 }
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(express.urlencoded({extended: true}));
+
+app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.engine('ejs', ejsMate);
+
+app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
 
 const sessionOptions = {
@@ -52,16 +54,12 @@ const sessionOptions = {
     },
 };
 
-//Home Route
-// app.get("/", (req, res) => {
-//     res.send("Hi, I am root");
-// });
-
 app.use(session(sessionOptions));
 app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());
+
 passport.use(new LocalStrategy(User.authenticate()));
 
 passport.serializeUser(User.serializeUser());
@@ -74,15 +72,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// Home Route
+app.get("/", (req, res) => {
+    res.redirect("/listings");
+});
+
+// Routes
 app.use("/listings", listingsRouter);
 app.use("/listings/:id/reviews", reviewsRouter);
 app.use("/", userRouter);
 
+// 404 Error Handler
 app.all("*", (req, res, next) => {
     console.log("404 Request:", req.method, req.originalUrl);
     next(new ExpressError(404, "Page Not Found!"));
 });
 
+// Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
 
@@ -91,10 +97,11 @@ app.use((err, req, res, next) => {
     }
 
     let { statusCode = 500, message = "Something went Wrong!" } = err;
+
     res.status(statusCode).render("error.ejs", { message });
 });
 
-
+// Local server only
 if (process.env.NODE_ENV !== "production") {
     app.listen(8080, () => {
         console.log("server is listining to port 8080");
