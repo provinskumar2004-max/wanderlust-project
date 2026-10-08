@@ -6,7 +6,7 @@ const {
     isLoggedIn,
     isOwner,
     validateListing
-} = require("../middleware.js");
+} = require("../appMiddleware");
 
 const listingController = require("../controllers/listings.js");
 const multer = require("multer");
