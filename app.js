@@ -20,7 +20,7 @@ const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
 
-const MONGO_URL = ("mongodb://127.0.0.1:27017/wanderlust");
+const MONGO_URL = process.env.MONGO_URL;
 
 main()
 .then(() => {
@@ -95,9 +95,12 @@ app.use((err, req, res, next) => {
 });
 
 
-app.listen(8080, () => {
-    console.log("server is listining to port 8080");
-});
+if (process.env.NODE_ENV !== "production") {
+    app.listen(8080, () => {
+        console.log("server is listining to port 8080");
+    });
+}
 
+module.exports = app;
 
 
